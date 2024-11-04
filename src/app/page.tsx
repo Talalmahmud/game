@@ -1,6 +1,6 @@
 "use client";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const [firstPlayer, setFirstPlayer] = useState<string>("");
@@ -17,6 +17,8 @@ export default function Home() {
   const textLengthCheck = (testText: string) => {
     return testText?.length >= 4 ? true : false;
   };
+  const [firstplayerTotalLetter, setFirstPlayerTotalLetter] = useState(50);
+  const [secondplayerTotalLetter, setSecondPlayerTotalLetter] = useState(50);
 
   const dictionarySearch = async (searchText: string) => {
     try {
@@ -27,7 +29,7 @@ export default function Home() {
 
       return {
         text: searchText,
-        result: searchText.length > 4 ? 5 + (searchText.length - 5) : 5,
+        result: searchText.length > 5 ? 5 + (searchText.length - 5) : 5,
       };
     } catch (error: any) {
       setErrorMessage(error?.response?.data?.title);
@@ -42,7 +44,12 @@ export default function Home() {
         const responseData = await dictionarySearch(firstPlayer);
         console.log(responseData);
         setFirstResult([...firstResult, responseData]);
-
+        setSecondPlayer(firstPlayer[firstPlayer?.length - 1]);
+        if (responseData?.result !== -1) {
+          setFirstPlayerTotalLetter(
+            firstplayerTotalLetter - firstPlayer?.length
+          );
+        }
         setFirstPlayer("");
       } else {
         setErrorMessage("Word is less than 4");
@@ -56,6 +63,12 @@ export default function Home() {
         setFirstPlayerDisable(false);
         const responseData = await dictionarySearch(secondPlayer);
         setSecondResult([...secondResult, responseData]);
+        setFirstPlayer(secondPlayer[secondPlayer?.length - 1]);
+        if (responseData?.result !== -1) {
+          setSecondPlayerTotalLetter(
+            secondplayerTotalLetter - secondPlayer.length
+          );
+        }
         setSecondPlayer("");
       } else {
         setErrorMessage("Word is less than 4");
@@ -69,6 +82,7 @@ export default function Home() {
       setSecondPlayerDisable(false);
       const responseData = await dictionarySearch(firstPlayer);
       setFirstResult([...firstResult, responseData]);
+      setSecondPlayer(firstPlayer[firstPlayer?.length - 1]);
       setFirstPlayer("");
     } else {
       setErrorMessage("Word is less than 4");
@@ -79,18 +93,30 @@ export default function Home() {
       setSecondPlayerDisable(true);
       setFirstPlayerDisable(false);
       const responseData = await dictionarySearch(secondPlayer);
-
+      setFirstPlayer(secondPlayer[secondPlayer?.length - 1]);
       setSecondResult([...secondResult, responseData]);
       setSecondPlayer("");
     } else {
       setErrorMessage("Word is less than 4");
     }
   };
+
+  useEffect(() => {
+    if (firstplayerTotalLetter <= 0) {
+      alert("First player is winner");
+      location.reload();
+    }
+    if (secondplayerTotalLetter <= 0) {
+      alert("Second player is winner");
+      location.reload();
+    }
+  }, [firstplayerTotalLetter, secondplayerTotalLetter]);
   return (
     <div className=" bg-gray-800 w-full min-h-screen  ">
       <div className=" w-full h-full flex items-center justify-center gap-6 pt-16">
         <div className=" flex  flex-col gap-2 w-[400px]">
           <p className=" text-[20px] font-semibold text-white">Player 1</p>
+          <p className=" text-white">{firstplayerTotalLetter}</p>
           <input
             type="text"
             value={firstPlayer}
@@ -122,6 +148,7 @@ export default function Home() {
         </div>
         <div className=" flex  flex-col gap-2 w-[400px]">
           <p className=" text-[20px] font-semibold text-white">Player 2</p>
+          <p className=" text-white">{secondplayerTotalLetter}</p>
           <input
             type="text"
             value={secondPlayer}
